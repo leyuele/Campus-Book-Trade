@@ -64,3 +64,27 @@ class CommitView(generic.CreateView):
     def get_success_url(self):
         messages.success(self.request, "发布成功! ")
         return reverse('app:commit')
+
+
+
+class SearchView(generic.ListView):
+    model = Product
+    template_name = 'app/search.html'
+    context_object_name = 'product_list'
+    paginate_by = 15
+    
+    def get_queryset(self):
+        query = self.request.GET.get('q', '')
+        if query:
+            return Product.objects.filter(title__icontains=query, status=1).order_by('-timestamp')
+        else:
+            return Product.objects.filter(status=1).order_by('-timestamp')
+    
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super(SearchView, self).get_context_data(**kwargs)
+        paginator = context.get('paginator')
+        page = context.get('page_obj')
+        page_list = get_page_list(paginator, page)
+        context['page_list'] = page_list
+        context['q'] = self.request.GET.get('q', '')
+        return context

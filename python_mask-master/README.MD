@@ -48,16 +48,17 @@ pip install -r requirements.txt
 创建 MySQL 数据库 python_mask
 在 mask/settings.py 中配置数据库连接信息
 恢复数据库结构：python manage.py migrate
-创建管理员账户（可选）：
 
+为了能够访问后台管理系统，需要创建一个超级用户账户：
 python manage.py createsuperuser
-运行项目：
 
+
+启动开发服务器：
 python manage.py runserver
 访问应用：
 
-前台页面：http://127.0.0.1:8000/
-管理后台：http://127.0.0.1:8000/admin/
+前台页面：在浏览器中访问 http://127.0.0.1:8000/ 查看网站首页
+管理后台：在浏览器中访问 http://127.0.0.1:8000/admin/ 进入后台管理系统（使用上面创建的超级用户账户）
 
 **项目结构说明**
 mask/                 # Django项目配置文件夹
