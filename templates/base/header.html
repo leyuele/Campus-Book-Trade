@@ -22,6 +22,11 @@
                 <a class="ui tiny secondary basic button" href="{% url 'app:login' %}">登录</a>
                 <a class="ui tiny primary basic button" href="{% url 'app:login' %}">发布（需登录）</a>
             {% endif %}
+            <form class="ui small icon input v-video-search" method="GET" action="{% url 'app:search' %}">
+                <input class="prompt" value="{{ q }}" type="text" placeholder="搜索" name="q" id="v-search">
+                <i class="search icon" style="cursor:pointer;" onclick="this.parentNode.submit()"></i>
+            </form>
+            <a class="ui tiny secondary basic button" id="v-header-login" target="_blank" href="{% url 'app:commit' %}">发布</a>
         </div>
     </div>
 </div>
