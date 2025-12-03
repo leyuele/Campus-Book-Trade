@@ -3,34 +3,30 @@
 
 {% block content %}
 <div id="wrapper" style="max-width: 800px; margin: 20px auto; padding: 0 15px;">
-    <!-- 分类标签（全部/求购/供应）：点击时保留搜索关键词 -->
+    <!-- 分类标签（全部/求购/供应）：保留原有搜索参数逻辑 -->
     <div class="classification" style="margin: 20px 0;">
-        <!-- 全部标签：带搜索参数q -->
         <a class="ui {% if not c %}red{% else %}gray{% endif %} label"
            href="{% if q %}{% url 'home' %}?q={{ q }}{% else %}{% url 'home' %}{% endif %}"
            style="margin-right: 10px;">
             全部
         </a>
-        <!-- 求购标签：带分类c=1和搜索参数q -->
         <a class="ui {% if c == '1' %}red{% else %}gray{% endif %} label"
            href="{% if q %}?c=1&q={{ q }}{% else %}?c=1{% endif %}"
            style="margin-right: 10px;">
             求购
         </a>
-        <!-- 供应标签：带分类c=0和搜索参数q -->
         <a class="ui {% if c == '0' %}red{% else %}gray{% endif %} label"
-           href="{% if q %}?c=0&q={{ q }}{% else %}?c=0{% endif %}">
+           href="{% if q %}?c=0&q={{ q }}{% else %}{% endif %}">
             供应
         </a>
     </div>
 
-    <!-- 商品列表：修复按钮对齐问题 -->
+    <!-- 商品列表：让按钮靠最右侧 -->
     <div class="large ui middle aligned divided list">
         {% for item in product_list %}
-        <!-- 使用Flex布局实现垂直居中对齐 -->
         <div class="item" style="display: flex; align-items: center; justify-content: space-between; padding: 15px; border-bottom: 1px solid #eee;">
-            <!-- 左侧商品信息（图标+文字） -->
-            <div style="display: flex; align-items: center;">
+            <!-- 左侧商品信息：加flex-grow:1，占据剩余空间，让按钮靠最右 -->
+            <div style="display: flex; align-items: center; flex-grow: 1;">
                 <img class="ui avatar image" src="{% static 'img/ic_sell.png' %}">
                 <div style="margin-left: 12px;">
                     <div style="font-size: 16px; font-weight: 500; margin-bottom: 5px;">
@@ -46,13 +42,15 @@
                 </div>
             </div>
 
-            <!-- 右侧“查看详情”按钮：垂直居中 -->
-            <a class="small ui blue button" href="{% url 'app:detail' item.pk %}">
+            <!-- 右侧“查看详情”按钮：保持样式 -->
+            <a class="ui blue button"
+               href="{% url 'app:detail' item.pk %}"
+               style="text-align: center; padding: 8px 20px; min-width: 110px; white-space: nowrap; margin-left: 15px;">
                 查看详情
             </a>
         </div>
         {% empty %}
-        <!-- 无数据时显示 -->
+        <!-- 无数据提示：保留原有逻辑 -->
         <div style="text-align: center; padding: 50px 0;">
             <img src="{% static 'img/empty.png' %}" style="width: 100px; margin-bottom: 20px;" alt="暂无数据">
             <h3 style="color: #999;">
@@ -66,14 +64,13 @@
         {% endfor %}
     </div>
 
-    <!-- 分页导航：保留搜索和分类参数 -->
+    <!-- 分页导航：保留原有参数逻辑 -->
     {% if page_list %}
     <div class="ui pagination menu" style="margin: 20px auto; display: table;">
         {% for page in page_list %}
             {% if page == '...' %}
                 <a class="icon item">{{ page }}</a>
             {% else %}
-                <!-- 分页链接携带分类c和搜索q参数 -->
                 <a class="item {% if page == page_obj.number %}active{% endif %}"
                    href="?page={{ page }}{% if c %}&c={{ c }}{% endif %}{% if q %}&q={{ q }}{% endif %}">
                     {{ page }}
