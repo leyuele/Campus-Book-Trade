@@ -121,10 +121,10 @@ timestamp: 发布时间
 
 ### **部署注意事项**
 
-修改 mask/settings.py 中的 SECRET_KEY
-设置 DEBUG = False 用于生产环境
-配置合适的数据库连接
-配置静态文件收集和部署
+- 修改 mask/settings.py 中的 SECRET_KEY
+- 设置 DEBUG = False 用于生产环境
+- 配置合适的数据库连接
+- 配置静态文件收集和部署
 
 ### 启动项目 
 
