@@ -161,102 +161,213 @@ class Product(models.Model):
 
 
 ### 业务编写
+本项目一共分为4个主要页面：首页（列表页）、详情页、发布页、登录/注册页。
+Model设计
+主要是对需求表Product进行设计，在此项目中，我们需要标题、联系人、电话等字段。可参考models.py文件。
+设计字段如下：
 
-本项目一共分为3个页面，分别是列表页、详情页、提交页。
+```python 
+class Product(models.Model):
+    list_display = ("title", "type", "location")
+    title = models.CharField(max_length=100,blank=True, null=True)
+    type = models.IntegerField(default=0)  # 0=供应, 1=需求
+    pv = models.IntegerField(default=0)
+    contact = models.CharField(max_length=10,blank=True, null=True)
+    location = models.CharField(max_length=20,blank=True, null=True)
+    phone = models.CharField(max_length=13, blank=True, null=True)
+    weixin = models.CharField(max_length=50, blank=True, null=True)
+    status = models.BooleanField(default=False)  # False=待审核, True=已审核
+    timestamp = models.DateTimeField(auto_now_add=True, null=True)
+    expire = models.IntegerField(default=1)  # 有效期(天)
 
-我们一一讲解
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        db_table = "mask_product"
+
+```
 
 #### 首页
+首先是首页，它的模版位于```templates/app/index.html```，主要是用来展示商品列表，并支持分类筛选和搜索。所有的接口都位于```app/urls.py```里面，如下：
 
-首先是首页，它的模版位于templates/app/index.html  它主要是用来展示首页内容， 并提交搜索词，到搜索接口，所有的接口都位于app/urls.py里面，如下
-
-```python
+```python 
 app_name = 'app'
 urlpatterns = [
     path('index', views.IndexView.as_view(), name='index'),
     path('detail/<int:pk>', views.DetailView.as_view(), name='detail'),
-    path('commit', views.CommitView.as_view(), name='commit')
+    path('commit', views.CommitView.as_view(), name='commit'),
+    path('login/', views.CustomLoginView.as_view(), name='login'),
+    path('logout/', views.CustomLogoutView.as_view(), name='logout'),
+    path('register/', views.RegisterView.as_view(), name='register')
 ]
 ```
 
-我们设置首页的路由为IndexView， 开始编写IndexView的代码：
+设置首页的路由为```IndexView```，开始编写```IndexView```的代码：
 
 ```python
 class IndexView(generic.ListView):
+    """商品列表页：支持分类筛选、搜索和分页"""
     model = Product
     template_name = 'app/index.html'
     context_object_name = 'product_list'
     paginate_by = 15
-    c = None
+    c = None  # 分类参数（0:供应，1:需求）
+    q = None  # 搜索关键词
 
-    def get_context_data(self, *, object_list=None, **kwargs):
-        context = super(IndexView, self).get_context_data(**kwargs)
+    def get_context_data(self, object_list=None, **kwargs):
+        """补充上下文：分页数据、分类参数、搜索关键词"""
+        context = super().get_context_data(object_list=object_list, **kwargs)
         paginator = context.get('paginator')
         page = context.get('page_obj')
-        page_list = get_page_list(paginator, page)
-        context['c'] = self.c
-        context['page_list'] = page_list
+        context['page_list'] = get_page_list(paginator, page)  # 分页控件
+        context['c'] = self.c  # 传递分类参数到模板
+        context['q'] = self.q  # 传递搜索关键词到模板（用于回显）
         return context
 
     def get_queryset(self):
+        """获取商品列表：支持分类筛选和搜索"""
+        # 1. 获取分类参数（c）和搜索关键词（q）
         self.c = self.request.GET.get("c", None)
+        self.q = self.request.GET.get("q", "").strip()  # 去除首尾空格
+
+        # 基础查询：只显示已审核商品（status=1），按发布时间倒序
+        queryset = Product.objects.filter(status=1).order_by('-timestamp')
+
+        # 2. 应用分类筛选（如果有c参数）
         if self.c:
-            return Product.objects.filter(type=self.c).order_by('-timestamp')
-        else:
-            return Product.objects.filter(status=0).order_by('-timestamp')
+            queryset = queryset.filter(type=self.c)
 
+        # 3. 应用搜索筛选（如果有关键词q）：模糊匹配标题
+        if self.q:
+            queryset = queryset.filter(title__icontains=self.q)
+
+        return queryset
 ```
-
+功能说明：
+- 使用generic.ListView通用视图类，简化开发
+- 支持双筛选：分类筛选(?c=0或?c=1)和关键词搜索(?q=关键词)
+- 只显示已审核(status=1)的商品，按发布时间倒序排列
+- 分页显示，每页15条数据
+- 通过自定义辅助函数get_page_list实现分页控件
 
 #### 详情页
-
-再来开发详情页，从urls.py中看到，详情页是由DetailView来实现的：
-
+详情页从urls.py中看到，是由```DetailView```来实现的：
 ```python
 class DetailView(generic.DetailView):
+    """商品详情页：展示单个商品的详细信息"""
     model = Product
     template_name = 'app/detail.html'
-
-    def get_object(self, queryset=None):
-        obj = super().get_object()
-        return obj
+    context_object_name = 'product'  # 模板中使用的变量名
 
     def get_context_data(self, **kwargs):
-        context = super(DetailView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         return context
 ```
-
-它很简单，继承了DetailView通用模板类来显示详情。
-
-#### 提交页
-
-提交页是由CommitView来实现的：
-
+功能说明：
+- 继承自DetailView通用模板类来显示详情
+- 使用<int:pk>捕获URL中的主键ID，自动查找对应商品
+- 在模板中可以通过{{ product.title }}等方式访问商品属性
+- 如需实现浏览量统计，可在get_object方法中添加pv字段自增逻辑
+#### 发布页
+发布页是由```CommitView```来实现的：
 ```python
+@method_decorator(login_required, name='dispatch')
 class CommitView(generic.CreateView):
-
+    """商品发布页：仅登录用户可访问，含频率限制"""
     model = Product
     form_class = CommitForm
     template_name = 'app/commit.html'
 
-    @ratelimit(key='ip', rate='2/m')
+    @ratelimit(key='ip', rate='2/m')  # 限制每IP每分钟最多2次提交
     def post(self, request, *args, **kwargs):
         was_limited = getattr(request, 'limited', False)
         if was_limited:
-            messages.warning(self.request, "操作太频繁了，请1分钟后再试")
-            return render(request, 'app/commit.html', {'form': CommitForm()})
+            messages.warning(request, "操作太频繁了，请1分钟后再试")
+            return render(request, self.template_name, {'form': CommitForm()})
         return super().post(request, *args, **kwargs)
 
     def get_success_url(self):
-        messages.success(self.request, "发布成功! ")
-        return reverse('app:commit')
+        messages.success(self.request, "发布成功！您的商品已提交审核")
+        return reverse('app:commit')  # 返回发布页，可继续发布
+```
+功能说明：
+- 继承自CreateView，因为是创建操作
+- 使用@method_decorator(login_required, name='dispatch')装饰器，限制只有登录用户才能访问
+- 在post方法中，通过ratelimit装饰器限制提交次数，防止恶意提交（原代码为100/h，现改为2/m更合理）
+- 发布成功后，商品status默认为False（待审核），需管理员审核后才会显示在首页
+- 使用Django的messages框架显示操作反馈
+- 
+#### 用户认证
+
+1. 登录功能
+```python
+class CustomLoginView(LoginView):
+    """自定义登录页：指定模板，已登录用户自动跳转"""
+    template_name = 'app/login.html'
+    redirect_authenticated_user = True  # 已登录用户访问登录页时自动跳转
+
+    def get_success_url(self):
+        return reverse('home')  # 登录成功返回首页
+```
+功能说明：
+- 继承Django内置的LoginView，自定义登录模板
+- redirect_authenticated_user=True防止已登录用户重复登录
+- 登录成功后重定向到首页
+
+2. 注册功能
+```python
+class RegisterView(generic.FormView):
+    """用户注册页：处理注册逻辑"""
+    template_name = 'app/register.html'
+    form_class = RegisterForm
+    success_url = '/app/login/'  # 注册成功跳转登录页
+
+    def form_valid(self, form):
+        form.save()  # 保存新用户
+        messages.success(self.request, "注册成功，请使用新账号登录")
+        return super().form_valid(form)
 ```
 
-它是继承自CreateView，因为是创建操作嘛，在post中，我们通过ratelimit来限制提交次数，防止恶意提交。
+功能说明：
+- 使用FormView处理注册表单
+- 注册成功后自动跳转到登录页
+- 使用RegisterForm表单类处理用户创建逻辑
+
+#### 辅助功能
+分页辅助函数（```helpers.py```）
+```python
+def get_page_list(paginator, page):
+    """
+    生成分页控件页码列表
+    :param paginator: 分页器对象
+    :param page: 当前页对象
+    :return: 显示的页码列表
+    """
+    page_list = []
+    # 当前页前后各显示3页
+    start = max(1, page.number - 3)
+    end = min(paginator.num_pages, page.number + 3)
+    
+    for i in range(start, end + 1):
+        page_list.append(i)
+    
+    # 添加首尾页和省略号
+    if start > 1:
+        page_list = [1, '...'] + page_list
+    if end < paginator.num_pages:
+        page_list = page_list + ['...', paginator.num_pages]
+    
+    return page_list
+```
+功能说明：
+- 生成分页控件所需的页码列表
+- 当前页前后各显示3页
+- 添加首页、末页和省略号，提升用户体验
 
 ### 运行项目
 
-```
+```bash
 python3 manage.py runserver
 ```
 
