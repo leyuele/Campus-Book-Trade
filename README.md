@@ -301,6 +301,7 @@ class CommitView(generic.CreateView):
 #### 用户认证
 
 1. 登录功能
+
 ```python
 class CustomLoginView(LoginView):
     """自定义登录页：指定模板，已登录用户自动跳转"""
@@ -316,6 +317,7 @@ class CustomLoginView(LoginView):
 - 登录成功后重定向到首页
 
 2. 注册功能
+
 ```python
 class RegisterView(generic.FormView):
     """用户注册页：处理注册逻辑"""
