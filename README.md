@@ -65,6 +65,7 @@ templates/            # 模板文件夹
 
 static/               # 静态文件夹
 ├── css/              # 样式文件
+├── img/              # 图片文件
 └── js/               # JavaScript文件
 ```
 ### **主要功能模块**
