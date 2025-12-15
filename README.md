@@ -45,7 +45,7 @@ python manage.py runserver
 管理后台：http://127.0.0.1:8000/admin/
 
 ### **项目结构说明**
-
+'''
 mask/                 # Django项目配置文件夹
 ├── settings.py       # 项目配置文件
 ├── urls.py           # 主URL配置
@@ -66,7 +66,7 @@ templates/            # 模板文件夹
 static/               # 静态文件夹
 ├── css/              # 样式文件
 └── js/               # JavaScript文件
-
+'''
 ### **主要功能模块**
 
 1. 首页 (Index)
