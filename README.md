@@ -26,7 +26,11 @@ pip install -r requirements.txt
 
 创建 MySQL 数据库 python_mask
 在 mask/settings.py 中配置数据库连接信息
-恢复数据库结构：python manage.py migrate
+恢复数据库结构：
+```bash
+python manage.py migrate
+```
+
 创建管理员账户（可选）：
 
 ```bash
@@ -111,8 +115,8 @@ timestamp: 发布时间
 
 项目包含自定义模板标签 app_tag：
 
-time_since: 显示相对发布时间
-check_expire: 检查信息是否过期
+- time_since: 显示相对发布时间
+- check_expire: 检查信息是否过期
 
 ### **部署注意事项**
 
