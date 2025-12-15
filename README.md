@@ -179,7 +179,7 @@ urlpatterns = [
 ]
 ```
 
-我们设置首页的路由为IndexView， 开始编写IndexView的代码。它的代码非常简单：
+我们设置首页的路由为IndexView， 开始编写IndexView的代码：
 
 ```python
 class IndexView(generic.ListView):
@@ -210,7 +210,7 @@ class IndexView(generic.ListView):
 
 #### 详情页
 
-我们再来开发详情页，从urls.py中看到，详情页是由DetailView来实现的，我们来窥探它的全貌：
+再来开发详情页，从urls.py中看到，详情页是由DetailView来实现的：
 
 ```python
 class DetailView(generic.DetailView):
@@ -230,7 +230,7 @@ class DetailView(generic.DetailView):
 
 #### 提交页
 
-最后再来看一下提交页，它是由CommitView来实现的。同样是观看代码：
+提交页是由CommitView来实现的：
 
 ```python
 class CommitView(generic.CreateView):
